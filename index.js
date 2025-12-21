@@ -55,7 +55,12 @@ const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: 'mobilememe'
+    database: 'mobilememe',
+    ssl: {
+      ca: fs.readFileSync('/etc/secrets/isrgrootx1.pem'),
+      minVersion: 'TLSv1.2',
+      rejectUnauthorized: true
+    }
 };
 const connection = mysql.createConnection(dbConfig);
 connection.connect((err) => {
@@ -101,4 +106,5 @@ connection.end((err) => {
 process.on('SIGINT', () => {
   endConnection();
   process.exit();
+
 });
