@@ -3,7 +3,7 @@ const express = require('express');
 require('dotenv').config();
 const app = express();
 const port = 3000;
-
+const fs = require('fs');
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
@@ -53,9 +53,10 @@ app.post('/data', (req, res) => {
 
 const dbConfig = {
     host: process.env.DB_HOST,
-    user: process.env.DB_USER,
+    user: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
-    database: 'mobilememe',
+    database: process.env.DB_DATABASE,
+    port: process.env.DB_PORT,
     ssl: {
       ca: fs.readFileSync('/etc/secrets/isrgrootx1.pem'),
       minVersion: 'TLSv1.2',
