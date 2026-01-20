@@ -89,6 +89,50 @@ app.post('/acc', async (req, res) => { // Endpoint to add account info for a use
     }
 });
 
+app.put('/acc/credits', async (req, res) => { // Endpoint to update credits for a user
+    const queryData = req.query;
+    const username = queryData.username;
+    const credits = parseInt(queryData.credits);
+    console.log('Query:', queryData);
+    if (username != null && credits != null) {
+        if (!Number.isInteger(credits)){
+            return res.status(400).send({status: 'Error', message: 'Invalid credits parameter'});
+        } else {
+            try {
+                await updateUserCredits(username, credits);
+                res.send({status: 'Success', message: 'Credits updated successfully'});
+            } catch (error) {
+                console.error('Database error:', error);
+                res.status(500).send({status: 'Error', message: 'Database error'});
+            }
+        }
+    } else {
+        res.status(400).send({status: 'Error', message: 'Missing parameters'});
+    }
+});
+
+app.get('/acc/credits', async (req, res) => { // Endpoint to get credits for a user
+    const queryData = req.query;
+    const username = queryData.username;
+    console.log('Query:', queryData);
+    if (username != null) {
+        try {
+            const results = await getUserCredits(username);
+            if (results.length === 0) {
+                return res.status(400).send({status: 'Error', message: 'User not found'});
+            }
+            const credits = results[0].Credits;
+            res.send({status: 'Success', credits: credits});
+        } catch (error) {
+            console.error('Database error:', error);
+            res.status(500).send({status: 'Error', message: 'Database error'});
+        }
+    } else {
+        res.status(400).send({status: 'Error', message: 'Missing username parameter'});
+    }
+});
+
+
 app.use(express.json()); 
 app.use(express.text()); 
 
@@ -184,6 +228,16 @@ return queryDatabase(sql);
 
 function addUserAccountInfo(username , password, credits) {
 const sql = `INSERT INTO Persons (Username, Password, Credits) VALUES ('${username}', '${password}', ${credits})`;
+return queryDatabase(sql);
+}
+
+function updateUserCredits(username, credits) {
+const sql = `UPDATE Persons SET Credits = ${credits} WHERE Username = '${username}'`;
+return queryDatabase(sql);
+}
+
+function getUserCredits(username) {
+const sql = `SELECT Credits FROM Persons WHERE Username = '${username}'`;
 return queryDatabase(sql);
 }
 
