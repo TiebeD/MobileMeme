@@ -4,12 +4,13 @@ require('dotenv').config();
 const app = express();
 const port = 3000;
 const fs = require('fs');
+const { parse } = require('path');
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
 
-app.get('/urls', (req, res) => {
+app.get('/urls', (req, res) => { // Endpoint to get URLs for a user (Will be removed) => Switched too RoomDB
     const queryData = req.query;
     console.log('Query:', queryData);
     if (queryData.userID != null && Number.isInteger(parseInt(queryData.userID))) {
@@ -28,6 +29,55 @@ app.get('/urls', (req, res) => {
     }
 });
 
+// New endpoint for user management
+
+app.get('/acc', (req, res) => { // Endpoint to get account info for a user 
+    const queryData = req.query;
+    const userID = parseInt(queryData.userID);
+    console.log('Query:', queryData); // Loging the query parameters
+    if (userID == null || !Number.isInteger(userID)) {
+            return res.status(400).send({status: 'Error', message: 'Invalid userID parameter'});
+        } else {
+            try {
+                getUserAccountInfo(userID).then((results) => {
+                    console.log('Database Results:', results); // Loging the database results
+                    if (results.length === 0) {
+                        return res.send({status: 'Error', message: 'No user found'});
+                    }
+                    res.send({status: 'Success', accountInfo: results[0]});
+                })
+            } catch (error) {
+                console.error('Database error:', error);
+                res.status(500).send({status: 'Error', message: 'Database error'});
+            }
+        }
+}); 
+
+app.post('/acc', (req, res) => { // Endpoint to add account info for a user
+    const queryData = req.query;
+    const userID = parseInt(queryData.userID);
+    const username = queryData.username;
+    const password = queryData.password;
+    const credits = parseInt(queryData.credits);
+    console.log('Query:', queryData);
+    if (userID == null || username == null || password == null || credits == null) {
+        if (!Number.isInteger(userID)){
+            return res.status(400).send({status: 'Error', message: 'Invalid userID parameter'});
+        } else if (!Number.isInteger(credits)){
+            return res.status(400).send({status: 'Error', message: 'Invalid credits parameter'});
+        } else {
+            try {
+                addUserAccountInfo(userID, username, password, credits);
+                res.send({status: 'Success', message: 'Account info added successfully'});
+            } catch (error) {
+                console.error('Database error:', error);
+                res.status(500).send({status: 'Error', message: 'Database error'});
+            }
+        }
+    } else {
+        res.status(400).send({status: 'Error', message: 'Missing parameters'});
+    }
+});
 
 app.use(express.json()); 
 app.use(express.text()); 
@@ -114,6 +164,16 @@ return queryDatabase(sql);
 
 function getUserUrls(userID) {
 const sql = `SELECT URL FROM userfav WHERE UserID = '${userID}'`;
+return queryDatabase(sql);
+}
+
+function getUserAccountInfo(userID) {
+const sql = `SELECT * FROM Persons WHERE UserID = '${userID}'`;
+return queryDatabase(sql);
+}
+
+function addUserAccountInfo(userID, username , password, credits) {
+const sql = `INSERT INTO Persons (UserID, Username, Password, Credits) VALUES ('${userID}', '${username}', '${password}', ${credits})`;
 return queryDatabase(sql);
 }
 
