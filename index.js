@@ -57,11 +57,11 @@ app.post('/acc', (req, res) => { // Endpoint to add account info for a user
     const queryData = req.query;
     const userID = parseInt(queryData.userID);
     const username = queryData.username;
-    const password = queryData.password;
+    const password = crypto.createHash('md5').update(queryData.password).digest('hex'); // Hashing the password
     const credits = parseInt(queryData.credits);
     console.log('Query:', queryData);
     console.log('data types:', typeof userID, typeof username, typeof password, typeof credits);
-    if (userID == null || username == null || password == null || credits == null) {
+    if (userID != null && username != null && password != null && credits != null) {
         if (!Number.isInteger(userID)){
             return res.status(400).send({status: 'Error', message: 'Invalid userID parameter'});
         } else if (!Number.isInteger(credits)){
