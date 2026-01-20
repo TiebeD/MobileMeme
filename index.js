@@ -5,6 +5,7 @@ const app = express();
 const port = 3000;
 const fs = require('fs');
 const { parse } = require('path');
+const crypto = require('crypto');
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
@@ -57,7 +58,7 @@ app.post('/acc', (req, res) => { // Endpoint to add account info for a user
     const queryData = req.query;
     const userID = parseInt(queryData.userID);
     const username = queryData.username;
-    const password = crypto.createHash('md5').update(queryData.password).digest('hex'); // Hashing the password
+    const password = queryData.password;
     const credits = parseInt(queryData.credits);
     console.log('Query:', queryData);
     console.log('data types:', typeof userID, typeof username, typeof password, typeof credits);
@@ -68,7 +69,8 @@ app.post('/acc', (req, res) => { // Endpoint to add account info for a user
             return res.status(400).send({status: 'Error', message: 'Invalid credits parameter'});
         } else {
             try {
-                addUserAccountInfo(userID, username, password, credits);
+                passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+                addUserAccountInfo(userID, username, passwordHash, credits);
                 res.send({status: 'Success', message: 'Account info added successfully'});
             } catch (error) {
                 console.error('Database error:', error);
