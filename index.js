@@ -34,13 +34,13 @@ app.get('/urls', (req, res) => { // Endpoint to get URLs for a user (Will be rem
 
 app.get('/acc', (req, res) => { // Endpoint to get account info for a user 
     const queryData = req.query;
-    const userID = parseInt(queryData.userID);
+    const username = queryData.username;
     const password = queryData.password;
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
     console.log('Query:', queryData);
-    if (userID != null && Number.isInteger(userID) && password != null) {
+    if (username != null && password != null) {
         try {
-            getUserPass(userID).then((results) => {
+            getUserPass(username).then((results) => {
                 if (results.length === 0) {
                     return res.status(400).send({status: 'Error', message: 'User not found'});
                 }
