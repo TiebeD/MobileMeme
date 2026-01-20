@@ -36,9 +36,9 @@ app.get('/acc', (req, res) => { // Endpoint to get account info for a user
     const queryData = req.query;
     const username = queryData.username;
     const password = queryData.password;
-    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
     console.log('Query:', queryData);
     if (username != null && password != null) {
+         const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
         try {
             getUserPass(username).then((results) => {
                 if (results.length === 0) {
