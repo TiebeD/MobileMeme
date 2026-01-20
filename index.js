@@ -176,7 +176,7 @@ return queryDatabase(sql);
 }
 
 function addUserAccountInfo(userID, username , password, credits) {
-const sql = `INSERT INTO Persons (UserID, Username, Password, Credits) VALUES ('${userID}', '${username}', '${password}', ${credits})`;
+const sql = `INSERT INTO Persons (AccID, Username, Password, Credits) VALUES ('${userID}', '${username}', '${password}', ${credits})`;
 return queryDatabase(sql);
 }
 
