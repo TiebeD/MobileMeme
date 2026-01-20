@@ -35,44 +35,51 @@ app.get('/urls', (req, res) => { // Endpoint to get URLs for a user (Will be rem
 app.get('/acc', (req, res) => { // Endpoint to get account info for a user 
     const queryData = req.query;
     const userID = parseInt(queryData.userID);
-    console.log('Query:', queryData); // Loging the query parameters
-    if (userID == null || !Number.isInteger(userID)) {
-            return res.status(400).send({status: 'Error', message: 'Invalid userID parameter'});
-        } else {
-            try {
-                getUserAccountInfo(userID).then((results) => {
-                    console.log('Database Results:', results); // Loging the database results
-                    if (results.length === 0) {
-                        return res.send({status: 'Error', message: 'No user found'});
-                    }
-                    res.send({status: 'Success', accountInfo: results[0]});
-                })
-            } catch (error) {
-                console.error('Database error:', error);
-                res.status(500).send({status: 'Error', message: 'Database error'});
-            }
+    const password = queryData.password;
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    console.log('Query:', queryData);
+    if (userID != null && Number.isInteger(userID) && password != null) {
+        try {
+            getUserPass(userID).then((results) => {
+                if (results.length === 0) {
+                    return res.status(400).send({status: 'Error', message: 'User not found'});
+                }
+                const storedPassword = results[0].Password;
+                if (storedPassword === hashedPassword) {
+                    res.send({status: 'Success', message: 'Authentication successful'});
+                } else {
+                    res.status(401).send({status: 'Error', message: 'Authentication failed'});
+                }
+            })
+        } catch (error) {
+            console.error('Database error:', error);
+            res.status(500).send({status: 'Error', message: 'Database error'});
         }
+    } else {
+        res.status(400).send({status: 'Error', message: 'Missing userID or password parameter or invalid userID'});
+    }
 }); 
 
 app.post('/acc', (req, res) => { // Endpoint to add account info for a user
     const queryData = req.query;
-    const userID = parseInt(queryData.userID);
+
     const username = queryData.username;
     const password = queryData.password;
     const credits = parseInt(queryData.credits);
     console.log('Query:', queryData);
-    console.log('data types:', typeof userID, typeof username, typeof password, typeof credits);
-    if (userID != null && username != null && password != null && credits != null) {
-        if (!Number.isInteger(userID)){
-            return res.status(400).send({status: 'Error', message: 'Invalid userID parameter'});
-        } else if (!Number.isInteger(credits)){
+    console.log('data types:', typeof username, typeof password, typeof credits);
+    if (username != null && password != null && credits != null) {
+        if (!Number.isInteger(credits)){
             return res.status(400).send({status: 'Error', message: 'Invalid credits parameter'});
         } else {
             try {
                 passwordHash = crypto.createHash('sha256').update(password).digest('hex');
-                addUserAccountInfo(userID, username, passwordHash, credits);
+                addUserAccountInfo(username, passwordHash, credits);
                 res.send({status: 'Success', message: 'Account info added successfully'});
             } catch (error) {
+                if (error.code === 'ER_DUP_ENTRY') {
+                    return  res.status(400).send({status: 'Error', message: 'Username already exists'});
+                } 
                 console.error('Database error:', error);
                 res.status(500).send({status: 'Error', message: 'Database error'});
             }
@@ -170,13 +177,13 @@ const sql = `SELECT URL FROM userfav WHERE UserID = '${userID}'`;
 return queryDatabase(sql);
 }
 
-function getUserAccountInfo(userID) {
-const sql = `SELECT * FROM Persons WHERE UserID = '${userID}'`;
+function getUserPass(username) {
+const sql = `SELECT Password FROM Persons WHERE Username = '${username}'`;
 return queryDatabase(sql);
 }
 
-function addUserAccountInfo(userID, username , password, credits) {
-const sql = `INSERT INTO Persons (AccID, Username, Password, Credits) VALUES ('${userID}', '${username}', '${password}', ${credits})`;
+function addUserAccountInfo(username , password, credits) {
+const sql = `INSERT INTO Persons (Username, Password, Credits) VALUES ('${username}', '${password}', ${credits})`;
 return queryDatabase(sql);
 }
 
