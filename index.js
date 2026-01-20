@@ -60,7 +60,7 @@ app.get('/acc', (req, res) => { // Endpoint to get account info for a user
     }
 }); 
 
-app.post('/acc', (req, res) => { // Endpoint to add account info for a user
+app.post('/acc', async (req, res) => { // Endpoint to add account info for a user
     const queryData = req.query;
 
     const username = queryData.username;
@@ -73,12 +73,12 @@ app.post('/acc', (req, res) => { // Endpoint to add account info for a user
             return res.status(400).send({status: 'Error', message: 'Invalid credits parameter'});
         } else {
             try {
-                passwordHash = crypto.createHash('sha256').update(password).digest('hex');
-                addUserAccountInfo(username, passwordHash, credits);
+                const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+                await addUserAccountInfo(username, passwordHash, credits);
                 res.send({status: 'Success', message: 'Account info added successfully'});
             } catch (error) {
                 if (error.code === 'ER_DUP_ENTRY') {
-                    return  res.status(400).send({status: 'Error', message: 'Username already exists'});
+                    return  res.status(409).send({status: 'Error', message: 'Username already exists'});
                 } 
                 console.error('Database error:', error);
                 res.status(500).send({status: 'Error', message: 'Database error'});
